@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "your-terraform-state-bucket"
+  bucket = "infra-automation-labs"
   force_destroy = true
 
   versioning {
