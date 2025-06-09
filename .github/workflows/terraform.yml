@@ -82,3 +82,7 @@ jobs:
       - name: Terraform Plan
         run: terraform plan
         working-directory: ./infra-automation-labs/${{ matrix.module }}
+
+     - name: Terraform Apply
+        run: terraform apply
+        working-directory: ./infra-automation-labs/${{ matrix.module }}
