@@ -42,50 +42,59 @@
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-name: Terraform Multi-Module
+name: Terraform Multi-Env Pipeline
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize]
+    branches:
+      - main
+    paths:
+      - 'environments/dev/**'
+      - 'environments/stage/**'
+      - 'environments/prod/**'
 
 jobs:
   terraform:
+    name: Terraform Plan and Apply
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        module:
-          - VPC
-          - modules
-          - S3
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ github.event.head_commit.message }}
+
     steps:
-      - name: Checkout repo
+      - name: Checkout Repo
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.6.6
+
+      - name: Set Working Directory
+        id: set-dir
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" == *"dev"* ]]; then
+            echo "dir=environments/dev" >> "$GITHUB_ENV"
+          elif [[ "${{ github.event.head_commit.message }}" == *"stage"* ]]; then
+            echo "dir=environments/stage" >> "$GITHUB_ENV"
+          elif [[ "${{ github.event.head_commit.message }}" == *"prod"* ]]; then
+            echo "dir=environments/prod" >> "$GITHUB_ENV"
+          else
+            echo "Environment not recognized"
+            exit 1
+          fi
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./infra-automation-labs/${{ matrix.module }}
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: ./infra-automation-labs/${{ matrix.module }}
+        working-directory: ${{ env.dir }}
 
       - name: Terraform Plan
-        run: terraform plan
-        working-directory: ./infra-automation-labs/${{ matrix.module }}
+        run: terraform plan -var-file="terraform.tfvars"
+        working-directory: ${{ env.dir }}
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve
-        working-directory: ./infra-automation-labs/${{ matrix.module }}
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve -var-file="terraform.tfvars"
+        working-directory: ${{ env.dir }}
