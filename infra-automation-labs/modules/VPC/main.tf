@@ -24,7 +24,7 @@ resource "aws_subnet" "public" {
 }
 terraform {
   backend "s3" {
-    bucket         = "your-terraform-state-bucket"
+    bucket         = "infra-automation-labs"
     key            = "vpc/terraform.tfstate"
     region         = "var.aws_region"
     dynamodb_table = "terraform-locks"
