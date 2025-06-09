@@ -58,7 +58,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: infra-automation-labs/VPC
+        working-directory: infra-automation-labs/modules/VPC
 
     steps:
       - name: Checkout repo
