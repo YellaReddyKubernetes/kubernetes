@@ -55,33 +55,24 @@ on:
 
 jobs:
   terraform:
-    name: Terraform Plan
     runs-on: ubuntu-latest
 
-    env:
-      TF_IN_AUTOMATION: true
-      AWS_REGION: ap-south-1
-
-    defaults:
-      run:
-        shell: bash
-
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set environment path
         id: set-env
         run: |
-          BRANCH_NAME="${GITHUB_BASE_REF:-${GITHUB_REF##*/}}"
-          if [[ "$BRANCH_NAME" == "dev" ]]; then
+          BRANCH="${GITHUB_BASE_REF:-${GITHUB_REF##*/}}"
+          if [[ "$BRANCH" == "dev" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH_NAME" == "stage" ]]; then
+          elif [[ "$BRANCH" == "stage" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH_NAME" == "prod" ]]; then
+          elif [[ "$BRANCH" == "prod" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
           else
-            echo "Unknown target branch: $BRANCH_NAME"
+            echo "Unknown branch $BRANCH"
             exit 1
           fi
 
@@ -92,7 +83,7 @@ jobs:
         run: terraform init
         working-directory: ${{ steps.set-env.outputs.env_path }}
 
-      - name: Terraform Format Check
+      - name: Terraform Format
         run: terraform fmt -check
         working-directory: ${{ steps.set-env.outputs.env_path }}
 
@@ -103,3 +94,4 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -input=false -var-file="terraform.tfvars"
         working-directory: ${{ steps.set-env.outputs.env_path }}
+
