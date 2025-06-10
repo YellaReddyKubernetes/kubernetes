@@ -51,7 +51,7 @@ on:
       - stage
       - prod
     paths:
-      - 'infra-automation-labs/envs/**'
+      - 'infra-automation-labs/modules/environments/**'
 
 jobs:
   terraform:
