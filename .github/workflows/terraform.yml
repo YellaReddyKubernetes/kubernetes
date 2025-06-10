@@ -46,14 +46,16 @@ name: Terraform CI/CD
 
 on:
   pull_request:
+    paths:
+      - 'infra-automation-labs/envs/dev/**'
+      - 'infra-automation-labs/envs/stage/**'
+      - 'infra-automation-labs/envs/prod/**'
     branches:
-      - dev
-      - stage
-      - prod
+      - main  # Adjust if you're merging into dev/stage/prod directly
 
 jobs:
   terraform:
-    name: Terraform Plan & Apply
+    name: Terraform Plan
     runs-on: ubuntu-latest
 
     env:
@@ -65,20 +67,21 @@ jobs:
         shell: bash
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set Environment Folder
+      - name: Set environment path
         id: set-env
         run: |
-          if [[ "${{ github.base_ref }}" == "dev" ]]; then
-            echo "env_path=envs/dev" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.base_ref }}" == "stage" ]]; then
-            echo "env_path=envs/stage" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ github.base_ref }}" == "prod" ]]; then
-            echo "env_path=envs/prod" >> "$GITHUB_OUTPUT"
+          BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF##*/}}"
+          if [[ "$BRANCH_NAME" == "dev" ]]; then
+            echo "env_path=infra-automation-labs/envs/dev" >> "$GITHUB_OUTPUT"
+          elif [[ "$BRANCH_NAME" == "stage" ]]; then
+            echo "env_path=infra-automation-labs/envs/stage" >> "$GITHUB_OUTPUT"
+          elif [[ "$BRANCH_NAME" == "prod" ]]; then
+            echo "env_path=infra-automation-labs/envs/prod" >> "$GITHUB_OUTPUT"
           else
-            echo "Unknown branch: ${{ github.base_ref }}"
+            echo "Unknown branch $BRANCH_NAME"
             exit 1
           fi
 
@@ -87,13 +90,17 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra-automation-labs/${{ steps.set-env.outputs.env_path }}
+        working-directory: ${{ steps.set-env.outputs.env_path }}
 
-      - name: Terraform Format
+      - name: Terraform Format Check
         run: terraform fmt -check
-        working-directory: infra-automation-labs/${{ steps.set-env.outputs.env_path }}
+        working-directory: ${{ steps.set-env.outputs.env_path }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ${{ steps.set-env.outputs.env_path }}
 
       - name: Terraform Plan
         run: terraform plan -input=false -var-file="terraform.tfvars"
-        working-directory: infra-automation-labs/${{ steps.set-env.outputs.env_path }}
+        working-directory: ${{ steps.set-env.outputs.env_path }}
 
