@@ -75,11 +75,11 @@ jobs:
         run: |
           BRANCH_NAME="${GITHUB_BASE_REF:-${GITHUB_REF##*/}}"
           if [[ "$BRANCH_NAME" == "dev" ]]; then
-            echo "env_path=infra-automation-labs/envs/dev" >> "$GITHUB_OUTPUT"
+            echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH_NAME" == "stage" ]]; then
-            echo "env_path=infra-automation-labs/envs/stage" >> "$GITHUB_OUTPUT"
+            echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH_NAME" == "prod" ]]; then
-            echo "env_path=infra-automation-labs/envs/prod" >> "$GITHUB_OUTPUT"
+            echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
           else
             echo "Unknown target branch: $BRANCH_NAME"
             exit 1
