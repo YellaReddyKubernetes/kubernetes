@@ -46,13 +46,12 @@ name: Terraform CI/CD
 
 on:
   pull_request:
-    paths:
-      - 'infra-automation-labs/envs/dev/**'
-      - 'infra-automation-labs/envs/stage/**'
-      - 'infra-automation-labs/envs/prod/**'
     branches:
-      - main  # Adjust if you're merging into dev/stage/prod directly
-      - dev/my-vpc
+      - dev
+      - stage
+      - prod
+    paths:
+      - 'infra-automation-labs/envs/**'
 
 jobs:
   terraform:
@@ -74,7 +73,7 @@ jobs:
       - name: Set environment path
         id: set-env
         run: |
-          BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF##*/}}"
+          BRANCH_NAME="${GITHUB_BASE_REF:-${GITHUB_REF##*/}}"
           if [[ "$BRANCH_NAME" == "dev" ]]; then
             echo "env_path=infra-automation-labs/envs/dev" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH_NAME" == "stage" ]]; then
@@ -82,7 +81,7 @@ jobs:
           elif [[ "$BRANCH_NAME" == "prod" ]]; then
             echo "env_path=infra-automation-labs/envs/prod" >> "$GITHUB_OUTPUT"
           else
-            echo "Unknown branch $BRANCH_NAME"
+            echo "Unknown target branch: $BRANCH_NAME"
             exit 1
           fi
 
@@ -104,4 +103,3 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -input=false -var-file="terraform.tfvars"
         working-directory: ${{ steps.set-env.outputs.env_path }}
-
