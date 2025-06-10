@@ -42,42 +42,58 @@
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-name: Terraform VPC Deployment
+name: Terraform CI/CD
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
-    paths:
-      - 'infra-automation-labs/VPC/**'
+      - dev
+      - stage
+      - prod
 
 jobs:
   terraform:
-    name: Terraform Init/Plan/Apply
+    name: Terraform Plan & Apply
     runs-on: ubuntu-latest
+
+    env:
+      TF_IN_AUTOMATION: true
+      AWS_REGION: ap-south-1
 
     defaults:
       run:
-<<<<<<< HEAD
-        working-directory: infra-automation-labs/VPC
-=======
-        working-directory: infra-automation-labs/modules/VPC
->>>>>>> 58f639be2e520429c4236daf30216c7fcdf8778d
+        shell: bash
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Set Environment Folder
+        id: set-env
+        run: |
+          if [[ "${{ github.base_ref }}" == "dev" ]]; then
+            echo "env_path=envs/dev" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.base_ref }}" == "stage" ]]; then
+            echo "env_path=envs/stage" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.base_ref }}" == "prod" ]]; then
+            echo "env_path=envs/prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unknown branch: ${{ github.base_ref }}"
+            exit 1
+          fi
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
 
       - name: Terraform Init
         run: terraform init
+        working-directory: infra-automation-labs/${{ steps.set-env.outputs.env_path }}
+
+      - name: Terraform Format
+        run: terraform fmt -check
+        working-directory: infra-automation-labs/${{ steps.set-env.outputs.env_path }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars"
+        run: terraform plan -input=false -var-file="terraform.tfvars"
+        working-directory: infra-automation-labs/${{ steps.set-env.outputs.env_path }}
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file="terraform.tfvars"
