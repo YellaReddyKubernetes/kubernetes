@@ -52,6 +52,7 @@ on:
       - 'infra-automation-labs/envs/prod/**'
     branches:
       - main  # Adjust if you're merging into dev/stage/prod directly
+      - dev/my-vpc
 
 jobs:
   terraform:
