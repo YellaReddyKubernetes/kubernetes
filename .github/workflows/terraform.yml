@@ -74,16 +74,17 @@ jobs:
       - name: Set Environment Path
         id: set-env
         run: |
-          BRANCH_NAME="${GITHUB_REF##*/}"
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "Branch is $BRANCH_NAME"
           if [[ "$BRANCH_NAME" == "dev" ]]; then
-            echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
+           echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH_NAME" == "stage" ]]; then
-            echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
+          echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH_NAME" == "prod" ]]; then
-            echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
+          echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
           else
-            echo "Unknown branch $BRANCH_NAME"
-            exit 1
+          echo "Unknown branch: $BRANCH_NAME"
+          exit 1
           fi
 
       - name: Configure AWS credentials
