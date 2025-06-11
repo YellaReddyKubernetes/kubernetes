@@ -56,7 +56,7 @@ on:
 
 jobs:
   terraform:
-    name: Terraform Plan & Apply
+    name: Terraform Plan or Apply
     runs-on: ubuntu-latest
 
     env:
@@ -68,23 +68,30 @@ jobs:
         shell: bash
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set Environment Path
         id: set-env
         run: |
-          BRANCH="${GITHUB_REF##*/}"
-          if [[ "$BRANCH" == "dev" ]]; then
+          BRANCH_NAME="${GITHUB_REF##*/}"
+          if [[ "$BRANCH_NAME" == "dev" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH" == "stage" ]]; then
+          elif [[ "$BRANCH_NAME" == "stage" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH" == "prod" ]]; then
+          elif [[ "$BRANCH_NAME" == "prod" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
           else
-            echo "Unknown branch: $BRANCH"
+            echo "Unknown branch $BRANCH_NAME"
             exit 1
           fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -108,6 +115,6 @@ jobs:
 
       - name: Terraform Apply
         if: github.event_name == 'push'
-        run: terraform apply -auto-approve -var-file="terraform.tfvars"
+        run: terraform apply -auto-approve -input=false -var-file="terraform.tfvars"
         working-directory: ${{ steps.set-env.outputs.env_path }}
 
