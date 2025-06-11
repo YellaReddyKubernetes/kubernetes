@@ -77,21 +77,31 @@ jobs:
       - name: Set environment path
         id: set-env
         run: |
-          BRANCH="${GITHUB_HEAD_REF}"
-          echo "Branch is $BRANCH"
-          if [[ "$BRANCH" == "dev" ]]; then
-            echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH" == "stage" ]]; then
-            echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH" == "prod" ]]; then
-            echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
-          elif [[ "$BRANCH" == feature/* ]]; then
-            echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
-          else
-            echo "Unknown branch: $BRANCH"
-            exit 1
-          fi
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_HEAD_REF: $GITHUB_HEAD_REF"
+          echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          echo "Resolved branch: $BRANCH"
+
+          case "$BRANCH" in
+            dev)
+              echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
+              ;;
+            stage)
+              echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
+              ;;
+            prod)
+              echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
+              ;;
+            feature/*)
+              echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unknown branch: $BRANCH"
+              exit 1
+              ;;
+          esac
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
