@@ -74,12 +74,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set Environment Path
+      - name: Set environment path
         id: set-env
         run: |
-          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF##*/}}"
+          BRANCH="${GITHUB_HEAD_REF}"
           echo "Branch is $BRANCH"
-
           if [[ "$BRANCH" == "dev" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH" == "stage" ]]; then
@@ -90,6 +89,7 @@ jobs:
             echo "Unknown branch: $BRANCH"
             exit 1
           fi
+
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
