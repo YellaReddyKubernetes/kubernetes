@@ -94,10 +94,10 @@ jobs:
             prod)
               echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
               ;;
-          feature/*)
+            feature/*)
               echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
               ;;
-          *)
+            *)
               echo "Unknown branch: $BRANCH"
               exit 1
               ;;
