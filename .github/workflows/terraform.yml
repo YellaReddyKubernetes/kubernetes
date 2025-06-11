@@ -46,23 +46,18 @@ name: Terraform CI/CD
 
 on:
   pull_request:
-    branches:
-      - dev
-      - stage
-      - prod
+    branches: [dev, stage, prod]
     paths:
       - 'infra-automation-labs/modules/environments/**'
 
   push:
-    branches:
-      - dev
-      - stage
-      - prod
+    branches: [dev, stage, prod]
     paths:
       - 'infra-automation-labs/modules/environments/**'
 
 jobs:
   terraform:
+    name: Terraform Workflow
     runs-on: ubuntu-latest
 
     env:
@@ -76,14 +71,15 @@ jobs:
         shell: bash
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set Environment Path
         id: set-env
         run: |
-          BRANCH="${GITHUB_REF##*/}"
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF##*/}}"
           echo "Branch is $BRANCH"
+
           if [[ "$BRANCH" == "dev" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH" == "stage" ]]; then
@@ -111,7 +107,13 @@ jobs:
         working-directory: ${{ steps.set-env.outputs.env_path }}
 
       - name: Terraform Plan
+        if: github.event_name == 'pull_request'
         run: terraform plan -input=false -var-file="terraform.tfvars"
+        working-directory: ${{ steps.set-env.outputs.env_path }}
+
+      - name: Terraform Apply
+        if: github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false -var-file="terraform.tfvars"
         working-directory: ${{ steps.set-env.outputs.env_path }}
 
       - name: Terraform Apply (only on push to dev/stage/prod)
