@@ -77,7 +77,7 @@ jobs:
       - name: Set environment path
         id: set-env
         run: |
-          BRANCH="${GITHUB_HEAD_REF}"
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
           echo "Branch is $BRANCH"
           if [[ "$BRANCH" == "dev" ]]; then
             echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
