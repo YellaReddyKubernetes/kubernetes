@@ -98,6 +98,12 @@ jobs:
         working-directory: ${{ steps.set-env.outputs.env_path }}
 
       - name: Terraform Plan
+        if: github.event_name == 'pull_request'
         run: terraform plan -input=false -var-file="terraform.tfvars"
+        working-directory: ${{ steps.set-env.outputs.env_path }}
+
+      - name: Terraform Apply
+        if: github.event_name == 'push'
+        run: terraform apply -auto-approve -var-file="terraform.tfvars"
         working-directory: ${{ steps.set-env.outputs.env_path }}
 
