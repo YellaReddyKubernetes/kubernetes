@@ -103,7 +103,6 @@ jobs:
               ;;
           esac
 
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
