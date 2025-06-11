@@ -87,6 +87,8 @@ jobs:
             echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
           elif [[ "$BRANCH" == feature/* ]]; then
             echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
+          elif [[ "$BRANCH" == feature/* ]]; then
+            echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
           else
             echo "Unknown branch: $BRANCH"
             exit 1
