@@ -49,7 +49,6 @@ on:
     branches: [dev, stage, prod]
     paths:
       - 'infra-automation-labs/modules/environments/**'
-
   push:
     branches: [dev, stage, prod]
     paths:
@@ -57,51 +56,42 @@ on:
 
 jobs:
   terraform:
-    name: Terraform Workflow
+    name: Terraform Plan or Apply
     runs-on: ubuntu-latest
 
     env:
       TF_IN_AUTOMATION: true
       AWS_REGION: ap-south-1
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     defaults:
       run:
         shell: bash
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set environment path
+      - name: Set Environment Path
         id: set-env
         run: |
-          echo "GITHUB_REF: $GITHUB_REF"
-          echo "GITHUB_HEAD_REF: $GITHUB_HEAD_REF"
-          echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
+          BRANCH_NAME="${GITHUB_REF##*/}"
+          if [[ "$BRANCH_NAME" == "dev" ]]; then
+            echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
+          elif [[ "$BRANCH_NAME" == "stage" ]]; then
+            echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
+          elif [[ "$BRANCH_NAME" == "prod" ]]; then
+            echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unknown branch $BRANCH_NAME"
+            exit 1
+          fi
 
-          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
-          echo "Resolved branch: $BRANCH"
-
-          case "$BRANCH" in
-            dev)
-              echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
-              ;;
-            stage)
-              echo "env_path=infra-automation-labs/modules/environments/stage" >> "$GITHUB_OUTPUT"
-              ;;
-            prod)
-              echo "env_path=infra-automation-labs/modules/environments/prod" >> "$GITHUB_OUTPUT"
-              ;;
-            feature/*)
-              echo "env_path=infra-automation-labs/modules/environments/dev" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "Unknown branch: $BRANCH"
-              exit 1
-              ;;
-          esac
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
